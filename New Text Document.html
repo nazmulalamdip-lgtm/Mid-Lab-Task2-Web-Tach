@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blood Donor Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fdf2f2;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #8B0000;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border: 2px solid #8B0000;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="number"],
+        input[type="password"],
+        select {
+            width: 250px;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .error {
+            color: red;
+            font-size: 13px;
+            margin-top: 3px;
+            margin-left: 154px;
+        }
+        button[type="submit"] {
+            background-color: #f0f0f0;
+            border: 1px solid #999;
+            padding: 6px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button[type="submit"]:hover {
+            background-color: #e0e0e0;
+        }
+        #count {
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 30px;
+        }
+        table {
+            width: 80%;
+            margin: 15px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .radio-group {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Blood Donor Registration</h1>
+
+    <div class="container">
+        <form id="regForm" method="post" action="" novalidate onsubmit="return validateForm()">
+            <div class="form-group">
+                <label for="fname">Full Name</label>
+                <input type="text" id="fname" name="fname" required minlength="3">
+                <div id="err-fname" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="sid">AIUB ID</label>
+                <input type="text" id="sid" name="sid" required pattern="^\d{2}-\d{5}-\d{1}$">
+                <div id="err-sid" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Mobile</label>
+                <input type="text" id="phone" name="phone" required pattern="^\d{11}$">
+                <div id="err-phone" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" id="age" name="age" required min="18" max="60">
+                <div id="err-age" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="bgroup">Blood Group</label>
+                <select id="bgroup" name="bgroup" required>
+                    <option value="">Select blood group</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                </select>
+                <div id="err-bgroup" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Donated before?</label>
+                <div class="radio-group">
+                    <input type="radio" id="donated-yes" name="donated" value="Yes" required>
+                    <label for="donated-yes" style="width: auto; font-weight: normal; margin-right: 15px;">Yes</label>
+                    <input type="radio" id="donated-no" name="donated" value="No" required>
+                    <label for="donated-no" style="width: auto; font-weight: normal;">No</label>
+                </div>
+                <div id="err-donated" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="agree"></label>
+                <input type="checkbox" id="agree" name="agree" required style="width: auto;">
+                <label for="agree" style="width: auto; font-weight: normal;">I am healthy and willing to donate</label>
+                <div id="err-agree" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="pass">Password</label>
+                <input type="password" id="pass" name="pass" required minlength="6">
+                <div id="err-pass" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="pass2">Confirm Password</label>
+                <input type="password" id="pass2" name="pass2" required>
+                <div id="err-pass2" class="error"></div>
+            </div>
+
+            <button type="submit">Register Donor</button>
+        </form>
+    </div>
+
+    <p id="count">Total donors: 0</p>
+
+    <table id="list">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>ID</th>
+                <th>Blood Group</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Dynamic rows will be added here -->
+        </tbody>
+    </table>
+
+    <script>
+        let donors = [];
+
+        function validateForm() {
+            let isValid = true;
+
+            // Get form field values
+            let fname = document.getElementById('fname').value.trim();
+            let sid = document.getElementById('sid').value.trim();
+            let phone = document.getElementById('phone').value.trim();
+            let ageVal = document.getElementById('age').value.trim();
+            let bgroup = document.getElementById('bgroup').value;
+            let donatedYes = document.getElementById('donated-yes').checked;
+            let donatedNo = document.getElementById('donated-no').checked;
+            let agree = document.getElementById('agree').checked;
+            let pass = document.getElementById('pass').value;
+            let pass2 = document.getElementById('pass2').value;
+
+            // Get error message elements
+            let errFname = document.getElementById('err-fname');
+            let errSid = document.getElementById('err-sid');
+            let errPhone = document.getElementById('err-phone');
+            let errAge = document.getElementById('err-age');
+            let errBgroup = document.getElementById('err-bgroup');
+            let errDonated = document.getElementById('err-donated');
+            let errAgree = document.getElementById('err-agree');
+            let errPass = document.getElementById('err-pass');
+            let errPass2 = document.getElementById('err-pass2');
+
+            // 1. Full Name check (at least 3 characters)
+            if (fname.length < 3) {
+                errFname.textContent = "Name must have at least 3 characters";
+                isValid = false;
+            } else {
+                errFname.textContent = "";
+            }
+
+            // 2. AIUB ID format check (XX-XXXXX-X)
+            let idPattern = /^\d{2}-\d{5}-\d{1}$/;
+            if (!idPattern.test(sid)) {
+                errSid.textContent = "AIUB ID must be in the format 22-12345-1";
+                isValid = false;
+            } else {
+                errSid.textContent = "";
+            }
+
+            // 3. Mobile check (exactly 11 digits)
+            let phonePattern = /^\d{11}$/;
+            if (!phonePattern.test(phone)) {
+                errPhone.textContent = "Mobile must be exactly 11 digits";
+                isValid = false;
+            } else {
+                errPhone.textContent = "";
+            }
+
+            // 4. Age check (number between 18 and 60)
+            if (ageVal === "" || isNaN(ageVal)) {
+                errAge.textContent = "Age must be between 18 and 60";
+                isValid = false;
+            } else {
+                let ageNum = Number(ageVal);
+                if (ageNum < 18 || ageNum > 60) {
+                    errAge.textContent = "Age must be between 18 and 60";
+                    isValid = false;
+                } else {
+                    errAge.textContent = "";
+                }
+            }
+
+            // 5. Blood Group check
+            if (bgroup === "") {
+                errBgroup.textContent = "Select a blood group";
+                isValid = false;
+            } else {
+                errBgroup.textContent = "";
+            }
+
+            // 6. Donated before radio check
+            if (!donatedYes && !donatedNo) {
+                errDonated.textContent = "Choose Yes or No";
+                isValid = false;
+            } else {
+                errDonated.textContent = "";
+            }
+
+            // 7. Checkbox agreement check
+            if (!agree) {
+                errAgree.textContent = "You must tick the box";
+                isValid = false;
+            } else {
+                errAgree.textContent = "";
+            }
+
+            // 8. Password check (at least 6 characters)
+            if (pass.length < 6) {
+                errPass.textContent = "Password must have at least 6 characters";
+                isValid = false;
+            } else {
+                errPass.textContent = "";
+            }
+
+            // 9. Confirm Password check
+            if (pass2 === "" || pass2 !== pass) {
+                errPass2.textContent = "Passwords do not match";
+                isValid = false;
+            } else {
+                errPass2.textContent = "";
+            }
+
+            // If all checks pass, add donor, update table, and reset form
+            if (isValid) {
+                let donor = {
+                    name: fname,
+                    id: sid,
+                    group: bgroup
+                };
+                donors.push(donor);
+                updateTable();
+                document.getElementById('regForm').reset();
+            }
+
+            return false; // Prevent page reload
+        }
+
+        function updateTable() {
+            let tbody = document.querySelector('#list tbody');
+            tbody.innerHTML = "";
+
+            donors.forEach((donor, index) => {
+                let tr = document.createElement('tr');
+
+                let tdName = document.createElement('td');
+                tdName.textContent = donor.name;
+                tr.appendChild(tdName);
+
+                let tdId = document.createElement('td');
+                tdId.textContent = donor.id;
+                tr.appendChild(tdId);
+
+                let tdGroup = document.createElement('td');
+                tdGroup.textContent = donor.group;
+                tr.appendChild(tdGroup);
+
+                let tdAction = document.createElement('td');
+                let removeBtn = document.createElement('button');
+                removeBtn.textContent = "Remove";
+                removeBtn.onclick = function() {
+                    removeDonor(index);
+                };
+                tdAction.appendChild(removeBtn);
+                tr.appendChild(tdAction);
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('count').textContent = "Total donors: " + donors.length;
+        }
+
+        function removeDonor(index) {
+            donors.splice(index, 1);
+            updateTable();
+        }
+    </script>
+</body>
+</html>
